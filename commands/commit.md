@@ -1,13 +1,20 @@
 ---
 description: 自动总结 staged 内容并提交（遵循 Conventional Commits 完整规范）
+allowed-arguments: ["-add"]
 ---
 
 请帮我创建一个 git commit：
 
-1. 运行 `git status` 查看 staged 的文件
-2. 运行 `git diff --staged` 查看 staged 的改动内容
-3. 根据改动内容，按照 Conventional Commits 完整规范生成提交消息
-4. 使用 `git commit -m "消息"` 或 `git commit -m "标题" -m "内容体" -m "footer"` 提交
+## 参数说明
+- 无参数：只提交已 staged 的内容
+- `-add`：先执行 `git add .` 暂存所有改动，再提交
+
+## 步骤
+1. 如果参数包含 `-add`，先运行 `git add .`
+2. 运行 `git status` 查看 staged 的文件
+3. 运行 `git diff --staged` 查看 staged 的改动内容
+4. 根据改动内容，按照 Conventional Commits 完整规范生成提交消息
+5. 使用 `git commit -m "消息"` 或 `git commit -m "标题" -m "内容体" -m "footer"` 提交
 
 ## Conventional Commits 完整格式
 

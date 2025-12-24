@@ -6,3 +6,8 @@
 /projects
 /session-env
 /ide
+/plugins/cache
+/plugins/marketplaces
+/telemetry
+history.jsonl
+stats-cache.json
