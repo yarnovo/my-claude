@@ -8,6 +8,7 @@
 /ide
 /plugins/cache
 /plugins/marketplaces
+/plugins/known_marketplaces.json
 /telemetry
 /image-cache
 history.jsonl

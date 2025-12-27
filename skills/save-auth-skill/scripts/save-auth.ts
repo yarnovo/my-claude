@@ -4,20 +4,19 @@
  * 保存 Playwright 认证状态（使用 Clerk Testing）
  *
  * 使用方法：
- *   npx tsx ~/.claude/skills/save-auth/scripts/save-auth.ts <project-root> [user-type]
+ *   npx tsx ~/.claude/skills/save-auth-skill/scripts/save-auth.ts <project-root> [role]
  *
  * 参数：
  *   project-root: 项目根目录
- *   user-type: 可选，指定用户类型 (user, admin, 或 all)
- *              默认为 all，会创建所有配置的用户认证
+ *   role: 可选，指定角色 (all 或具体角色名如 user, admin, trader)
+ *         默认为 all，会创建所有配置的用户认证
  *
  * 项目约定：
  *   - 结构: <root>/web/ (Next.js 应用)
  *   - 配置: <root>/.claude/config.local.json
  *   - 环境: <root>/web/.env.local
- *     - E2E_CLERK_USER_USERNAME=test@example.com → .auth/user.json
- *     - E2E_CLERK_ADMIN_USERNAME=admin@example.com → .auth/admin.json
- *   - 认证: <root>/.auth/*.json
+ *     - E2E_CLERK_USERS=user:test@example.com;admin:admin@example.com
+ *   - 认证: <root>/.auth/<role>.json
  */
 
 import * as fs from 'fs';
@@ -25,22 +24,34 @@ import * as path from 'path';
 import { execSync } from 'child_process';
 
 const PROJECT_ROOT = path.resolve(process.argv[2] || process.cwd());
-const USER_TYPE = process.argv[3] || 'all'; // user, admin, or all
+const TARGET_ROLE = process.argv[3] || 'all';
 
-// 用户类型映射：环境变量名 → 输出文件名
+// 用户配置
 interface UserConfig {
-  envKey: string;
+  role: string;
+  email: string;
   fileName: string;
   displayName: string;
 }
 
-const USER_CONFIGS: UserConfig[] = [
-  { envKey: 'E2E_CLERK_USER_USERNAME', fileName: 'user.json', displayName: '普通用户' },
-  { envKey: 'E2E_CLERK_ADMIN_USERNAME', fileName: 'admin.json', displayName: '管理员' },
-];
+// 解析 E2E_CLERK_USERS 环境变量
+// 格式: role:email;role:email
+function parseUsersEnv(envValue: string): UserConfig[] {
+  if (!envValue) return [];
+
+  return envValue.split(';').map((item) => {
+    const [role, email] = item.trim().split(':');
+    return {
+      role: role.trim(),
+      email: email.trim(),
+      fileName: `${role.trim()}.json`,
+      displayName: role.trim(),
+    };
+  });
+}
 
 // 项目约定检查
-function checkProjectConventions() {
+function checkProjectConventions(): UserConfig[] {
   console.log('\n🔍 检查项目约定...\n');
 
   const errors: string[] = [];
@@ -65,7 +76,6 @@ function checkProjectConventions() {
     const pkg = JSON.parse(fs.readFileSync(packageJson, 'utf8'));
     const deps = { ...pkg.dependencies, ...pkg.devDependencies };
 
-    // 检查技术栈
     if (!deps['next']) {
       warnings.push('未检测到 Next.js（约定：使用 Next.js 框架）');
     }
@@ -84,10 +94,10 @@ function checkProjectConventions() {
   } else {
     try {
       const config = JSON.parse(fs.readFileSync(configFile, 'utf8'));
-      if (!config.ports?.dev) {
-        warnings.push('config.local.json 缺少 ports.dev（将使用默认端口 3000）');
+      if (!config.ports?.nextjs) {
+        warnings.push('config.local.json 缺少 ports.nextjs（将使用默认端口 3000）');
       } else {
-        console.log(`   ✅ 端口配置: ${config.ports.dev}`);
+        console.log(`   ✅ 端口配置: ${config.ports.nextjs}`);
       }
     } catch {
       errors.push('.claude/config.local.json 格式错误');
@@ -106,20 +116,25 @@ function checkProjectConventions() {
     envContent += fs.readFileSync(envLocalFile, 'utf8');
   }
 
+  let users: UserConfig[] = [];
+
   if (!envContent) {
     errors.push('缺少 web/.env 或 web/.env.local');
   } else {
-    // 检查是否至少有一个用户配置
-    const hasAnyUser = USER_CONFIGS.some(c => envContent.includes(c.envKey));
-    if (!hasAnyUser) {
-      errors.push('缺少任何 E2E 用户配置（E2E_CLERK_USER_USERNAME 或 E2E_CLERK_ADMIN_USERNAME）');
-    } else {
-      USER_CONFIGS.forEach(config => {
-        if (envContent.includes(config.envKey)) {
-          console.log(`   ✅ ${config.envKey} 已配置 (${config.displayName})`);
-        }
-      });
+    // 解析 E2E_CLERK_USERS
+    const usersMatch = envContent.match(/E2E_CLERK_USERS=(.+)/);
+    if (usersMatch) {
+      users = parseUsersEnv(usersMatch[1]);
+      if (users.length > 0) {
+        console.log(`   ✅ E2E_CLERK_USERS 已配置 (${users.length} 个用户)`);
+        users.forEach((u) => console.log(`      - ${u.role}: ${u.email}`));
+      }
     }
+
+    if (users.length === 0) {
+      errors.push('缺少 E2E_CLERK_USERS 配置');
+    }
+
     if (!envContent.includes('CLERK_SECRET_KEY')) {
       errors.push('缺少 CLERK_SECRET_KEY');
     } else {
@@ -138,24 +153,25 @@ function checkProjectConventions() {
   // 输出检查结果
   if (errors.length > 0) {
     console.log('\n❌ 项目不符合约定：\n');
-    errors.forEach(e => console.log(`   • ${e}`));
+    errors.forEach((e) => console.log(`   • ${e}`));
     console.log('\n📋 约定要求：');
     console.log('   • 项目结构: <root>/web/ (Next.js 应用)');
     console.log('   • 配置文件: <root>/.claude/config.local.json');
     console.log('   • 环境变量: web/.env.local');
-    console.log('     - E2E_CLERK_USER_USERNAME=test@example.com');
+    console.log('     - E2E_CLERK_USERS=user:test@example.com;admin:admin@example.com');
     console.log('     - CLERK_SECRET_KEY=sk_test_xxx');
-    console.log('   • 认证保存: <root>/.auth/user.json');
+    console.log('   • 认证保存: <root>/.auth/<role>.json');
     console.log('');
     process.exit(1);
   }
 
   if (warnings.length > 0) {
     console.log('\n⚠️  警告：\n');
-    warnings.forEach(w => console.log(`   • ${w}`));
+    warnings.forEach((w) => console.log(`   • ${w}`));
   }
 
   console.log('\n✅ 项目约定检查通过\n');
+  return users;
 }
 
 // 检查并安装依赖
@@ -176,7 +192,6 @@ function checkDependencies() {
     execSync(`npm install -D ${missing.join(' ')}`, { cwd: webDir, stdio: 'inherit' });
   }
 
-  // 检查浏览器是否安装
   try {
     execSync('npx playwright install chromium', { cwd: webDir, stdio: 'inherit' });
   } catch {
@@ -185,7 +200,7 @@ function checkDependencies() {
 }
 
 // 执行检查
-checkProjectConventions();
+const allUsers = checkProjectConventions();
 checkDependencies();
 
 // 动态加载项目依赖
@@ -193,7 +208,9 @@ const webDir = path.join(PROJECT_ROOT, 'web');
 const nodeModules = path.join(webDir, 'node_modules');
 
 const { chromium } = require(path.join(nodeModules, '@playwright/test'));
-const { clerkSetup, clerk, setupClerkTestingToken } = require(path.join(nodeModules, '@clerk/testing/playwright'));
+const { clerkSetup, clerk, setupClerkTestingToken } = require(
+  path.join(nodeModules, '@clerk/testing/playwright')
+);
 const dotenv = require(path.join(nodeModules, 'dotenv'));
 
 const CONFIG_FILE = path.join(PROJECT_ROOT, '.claude/config.local.json');
@@ -214,7 +231,7 @@ if (!hasClerkKey) {
 function getPort(): number {
   try {
     const config = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8'));
-    return config.ports?.dev || 3000;
+    return config.ports?.nextjs || 3000;
   } catch {
     return 3000;
   }
@@ -222,14 +239,10 @@ function getPort(): number {
 
 // 获取需要处理的用户列表
 function getUsersToProcess(): UserConfig[] {
-  if (USER_TYPE === 'all') {
-    return USER_CONFIGS.filter(c => process.env[c.envKey]);
+  if (TARGET_ROLE === 'all') {
+    return allUsers;
   }
-  const config = USER_CONFIGS.find(c => c.fileName.startsWith(USER_TYPE));
-  if (config && process.env[config.envKey]) {
-    return [config];
-  }
-  return [];
+  return allUsers.filter((u) => u.role === TARGET_ROLE);
 }
 
 // 登录单个用户并保存认证状态
@@ -238,7 +251,7 @@ async function loginAndSave(
   baseUrl: string,
   userConfig: UserConfig
 ): Promise<boolean> {
-  const email = process.env[userConfig.envKey];
+  const email = userConfig.email;
   const authFile = path.join(AUTH_DIR, userConfig.fileName);
 
   console.log(`\n${'─'.repeat(40)}`);
@@ -249,13 +262,10 @@ async function loginAndSave(
   const page = await context.newPage();
 
   try {
-    // 设置 Clerk Testing Token
     await setupClerkTestingToken({ page });
 
-    // 导航到登录页面（带语言前缀避免重定向）
     await page.goto(`${baseUrl}/zh/sign-in`, { waitUntil: 'domcontentloaded' });
 
-    // 使用 Clerk 登录
     console.log('   🔐 正在登录...');
     await clerk.signIn({
       page,
@@ -264,7 +274,6 @@ async function loginAndSave(
     });
     console.log('   ✅ signIn 完成');
 
-    // 导航到受保护页面验证登录
     console.log('   📍 验证登录状态...');
     await page.goto(`${baseUrl}/zh/chat`, { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(2000);
@@ -276,7 +285,6 @@ async function loginAndSave(
 
     console.log('   ✅ 登录成功！');
 
-    // 保存认证状态
     await context.storageState({ path: authFile });
 
     const stats = fs.statSync(authFile);
@@ -284,7 +292,6 @@ async function loginAndSave(
 
     console.log(`   📁 已保存: ${authFile} (${sizeKB}KB)`);
     return true;
-
   } catch (error) {
     console.error(`   ❌ 登录失败: ${error}`);
     return false;
@@ -301,8 +308,7 @@ async function main() {
   if (usersToProcess.length === 0) {
     console.error('❌ 没有找到可处理的用户配置');
     console.error('   请在 web/.env.local 中配置:');
-    console.error('   - E2E_CLERK_USER_USERNAME=test@example.com');
-    console.error('   - E2E_CLERK_ADMIN_USERNAME=admin@example.com');
+    console.error('   E2E_CLERK_USERS=user:test@example.com;admin:admin@example.com');
     process.exit(1);
   }
 
@@ -312,20 +318,17 @@ async function main() {
   console.log(`   项目: ${PROJECT_ROOT}`);
   console.log(`   端口: ${port}`);
   console.log(`   用户: ${usersToProcess.length} 个`);
-  usersToProcess.forEach(u => {
-    console.log(`         - ${u.displayName}: ${process.env[u.envKey]}`);
+  usersToProcess.forEach((u) => {
+    console.log(`         - ${u.displayName}: ${u.email}`);
   });
   console.log('='.repeat(50));
 
-  // 确保 .auth 目录存在
   if (!fs.existsSync(AUTH_DIR)) {
     fs.mkdirSync(AUTH_DIR, { recursive: true });
   }
 
-  // 配置 Clerk
   await clerkSetup();
 
-  // 启动浏览器（headless 模式，全自动）
   console.log('\n🚀 启动浏览器...');
   const browser = await chromium.launch({ headless: true });
 
@@ -340,18 +343,17 @@ async function main() {
     await browser.close();
   }
 
-  // 输出汇总
   console.log('\n');
   console.log('='.repeat(50));
   console.log('📊 认证保存结果:');
   console.log('');
-  results.forEach(r => {
+  results.forEach((r) => {
     const icon = r.success ? '✅' : '❌';
     console.log(`   ${icon} ${r.user}`);
   });
   console.log('='.repeat(50));
 
-  const failCount = results.filter(r => !r.success).length;
+  const failCount = results.filter((r) => !r.success).length;
   if (failCount > 0) {
     console.error(`\n❌ ${failCount} 个用户登录失败`);
     process.exit(1);
