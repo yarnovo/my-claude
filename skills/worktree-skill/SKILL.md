@@ -1,5 +1,7 @@
 ---
+name: worktree
 description: Git Worktree 管理（支持分支名或功能描述）
+allowed-tools: Bash, Read, Write
 ---
 
 请帮我管理 git worktree：
@@ -102,7 +104,8 @@ git worktree prune
 
 4. **用 VS Code 打开**：
    ```bash
-   open -a "Visual Studio Code" <path>
+   # 优先使用 code 命令，不可用时 fallback 到 open
+   code <path> 2>/dev/null || open -a "Visual Studio Code" <path>
    ```
 
 输出格式：

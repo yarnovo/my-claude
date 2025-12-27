@@ -9,5 +9,6 @@
 /plugins/cache
 /plugins/marketplaces
 /telemetry
+/image-cache
 history.jsonl
 stats-cache.json
