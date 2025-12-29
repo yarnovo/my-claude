@@ -1,15 +1,13 @@
-/debug
-/file-history
-/shell-snapshots
-/todos
-/statsig
-/projects
-/session-env
-/ide
-/plugins/cache
-/plugins/marketplaces
-/plugins/known_marketplaces.json
-/telemetry
-/image-cache
-history.jsonl
-stats-cache.json
+# 忽略所有
+*
+
+# 保留以下目录
+!/commands/
+!/commands/**
+!/rules/
+!/rules/**
+!/skills/
+!/skills/**
+
+# 保留 gitignore 自身
+!.gitignore
