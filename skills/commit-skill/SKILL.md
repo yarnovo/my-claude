@@ -1,24 +1,17 @@
 ---
+name: commit
 description: 自动总结 staged 内容并提交（遵循 Conventional Commits 完整规范）
-allowed-arguments: ["-a", "--add", "-p", "--push"]
+allowed-tools: Bash, Read
 ---
 
-请帮我创建一个 git commit：
-
-## 参数说明
-- 无参数：只提交已 staged 的内容
-- `-a` / `--add`：先执行 `git add .` 暂存所有改动，再提交
-- `-p` / `--push`：提交后自动推送到远程
-
-参数可组合使用，如 `-a -p` 表示暂存、提交并推送。
+请帮我创建一个 git commit。
 
 ## 步骤
-1. 如果参数包含 `-a` 或 `--add`，先运行 `git add .`
-2. 运行 `git status` 查看 staged 的文件
-3. 运行 `git diff --staged` 查看 staged 的改动内容
-4. 根据改动内容，按照 Conventional Commits 完整规范生成提交消息
-5. 使用 `git commit -m "消息"` 或 `git commit -m "标题" -m "内容体" -m "footer"` 提交
-6. 如果参数包含 `-p` 或 `--push`，运行 `git push`
+
+1. 运行 `git status` 查看 staged 的文件
+2. 运行 `git diff --staged` 查看 staged 的改动内容
+3. 根据改动内容，按照 Conventional Commits 完整规范生成提交消息
+4. 使用 `git commit -m "消息"` 或 `git commit -m "标题" -m "内容体" -m "footer"` 提交
 
 ## Conventional Commits 完整格式
 
