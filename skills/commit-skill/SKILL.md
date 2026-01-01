@@ -8,8 +8,10 @@ allowed-tools: Bash, Read
 
 ## 步骤
 
-1. 运行 `git status` 查看 staged 的文件
-2. 运行 `git diff --staged` 查看 staged 的改动内容
+1. 运行 `git status` 查看当前状态
+2. 检查是否有 staged 的文件：
+   - **如果有 staged 文件**：运行 `git diff --staged` 查看改动内容
+   - **如果没有 staged 文件**：运行 `git add .` 将工作区所有改动添加到 staged，然后运行 `git diff --staged` 查看改动内容
 3. 根据改动内容，按照 Conventional Commits 完整规范生成提交消息
 4. 使用 `git commit -m "消息"` 或 `git commit -m "标题" -m "内容体" -m "footer"` 提交
 

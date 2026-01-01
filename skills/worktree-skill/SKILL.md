@@ -108,6 +108,14 @@ git worktree prune
    code <path> 2>/dev/null || open -a "Visual Studio Code" <path>
    ```
 
+5. **执行初始化脚本**（如果存在）：
+   ```bash
+   # 检查新 worktree 目录下是否有初始化脚本
+   if [ -x <path>/.claude/worktree-init.sh ]; then
+     cd <path> && ./.claude/worktree-init.sh
+   fi
+   ```
+
 输出格式：
 ```
 ✅ Worktree 创建成功！
@@ -117,6 +125,7 @@ git worktree prune
 📍 基于: current-branch
 
 已用 VS Code 打开新目录
+🔧 正在执行初始化脚本...
 ```
 
 ## 错误处理
