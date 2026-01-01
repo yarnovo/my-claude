@@ -65,7 +65,13 @@ function loadEnv(): Record<string, string> {
       content.split('\n').forEach((line) => {
         const match = line.match(/^([^#=]+)=(.*)$/);
         if (match) {
-          env[match[1].trim()] = match[2].trim();
+          let value = match[2].trim();
+          // 去掉引号
+          if ((value.startsWith('"') && value.endsWith('"')) ||
+              (value.startsWith("'") && value.endsWith("'"))) {
+            value = value.slice(1, -1);
+          }
+          env[match[1].trim()] = value;
         }
       });
     }
