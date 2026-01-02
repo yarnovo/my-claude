@@ -20,7 +20,7 @@ $ARGUMENTS
 | **删除** | `删除 xxx`、`移除 xxx`、`remove xxx`、`-d xxx`、`干掉 xxx` |
 | **同步检查** | `检查`、`同步状态`、`落后`、`check` |
 | **清理** | `清理`、`prune`、`清理无效` |
-| **创建** | 其他情况（分支名或功能描述） |
+| **创建** | 其他情况（分支名或功能描述），支持 `--from <分支>` 或 `从 <分支> 创建` |
 
 ## 执行步骤
 
@@ -102,21 +102,35 @@ git worktree prune
 ### 创建（默认）
 
 1. **解析参数**：
+   - **解析基础分支**（可选）：
+     - `--from <分支>` 或 `-f <分支>`：指定基础分支
+     - `从 <分支> 创建 xxx`：中文语法
+     - `基于 <分支> xxx`：中文语法
+     - 未指定时默认使用当前分支
    - 如果是英文且符合分支命名（小写、数字、`-`、`/`），直接作为分支名
    - 如果是中文描述，生成合适的英文分支名（kebab-case）
-   - 添加日期前缀：`<当前分支>-<分支名>-<YYYYMMDD>`
+   - 添加日期前缀：`<基础分支>-<分支名>-<YYYYMMDD>`
 
-2. **检查分支状态**：
+2. **验证基础分支**（如果指定了）：
+   ```bash
+   git show-ref --verify --quiet refs/heads/<base-branch>
+   # 或检查远程分支
+   git show-ref --verify --quiet refs/remotes/origin/<base-branch>
+   ```
+   - 如果基础分支不存在，提示用户并列出可用分支
+
+3. **检查目标分支状态**：
    ```bash
    git show-ref --verify --quiet refs/heads/<branch-name>
    ```
 
-3. **创建 worktree**：
+4. **创建 worktree**：
    - 目录位置：`../<仓库名>-<分支名>`
-   - 分支不存在：`git worktree add -b <branch> <path>`
+   - 分支不存在且指定基础分支：`git worktree add -b <branch> <path> <base-branch>`
+   - 分支不存在且使用当前分支：`git worktree add -b <branch> <path>`
    - 分支已存在：`git worktree add <path> <branch>`
 
-4. **执行初始化脚本**（如果存在）：
+5. **执行初始化脚本**（如果存在）：
    ```bash
    # 检查新 worktree 目录下是否有初始化脚本
    if [ -x <path>/.claude/worktree-init.sh ]; then
@@ -124,13 +138,13 @@ git worktree prune
    fi
    ```
 
-5. **读取生成的端口配置**：
+6. **读取生成的端口配置**：
    ```bash
    # 从初始化脚本生成的配置中读取端口
    cat <path>/.claude/worktree.json
    ```
 
-6. **用 VS Code 打开**：
+7. **用 VS Code 打开**：
    ```bash
    # 优先使用 code 命令，不可用时 fallback 到 open
    code <path> 2>/dev/null || open -a "Visual Studio Code" <path>
@@ -156,6 +170,7 @@ git worktree prune
 ## 错误处理
 
 - 不是 git 仓库 → 提示用户
+- 指定的基础分支不存在 → 提示用户并列出可用分支
 - 分支已被其他 worktree 使用 → 提示用户
 - 目录已存在 → 提示用户
 - 删除时有未提交更改 → 询问是否强制删除
@@ -164,10 +179,14 @@ git worktree prune
 ## 使用示例
 
 ```
-/worktree                     # 列出所有 worktree
-/worktree 修复登录bug          # 创建新 worktree
-/worktree 删除 loan-main       # 删除指定 worktree
-/worktree 删除那个旧的 v2      # 模糊匹配删除
-/worktree 检查同步状态         # 检查远程同步
-/worktree 清理                 # 清理无效引用
+/worktree                           # 列出所有 worktree
+/worktree 修复登录bug                # 基于当前分支创建
+/worktree 新功能 --from develop      # 基于 develop 创建
+/worktree 新功能 -f main             # 基于 main 创建（简写）
+/worktree 从 develop 创建 新功能     # 中文语法
+/worktree 基于 main 修复bug          # 中文语法
+/worktree 删除 loan-main             # 删除指定 worktree
+/worktree 删除那个旧的 v2            # 模糊匹配删除
+/worktree 检查同步状态               # 检查远程同步
+/worktree 清理                       # 清理无效引用
 ```
