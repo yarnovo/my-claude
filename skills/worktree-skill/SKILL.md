@@ -102,18 +102,24 @@ git worktree prune
    - 分支不存在：`git worktree add -b <branch> <path>`
    - 分支已存在：`git worktree add <path> <branch>`
 
-4. **用 VS Code 打开**：
-   ```bash
-   # 优先使用 code 命令，不可用时 fallback 到 open
-   code <path> 2>/dev/null || open -a "Visual Studio Code" <path>
-   ```
-
-5. **执行初始化脚本**（如果存在）：
+4. **执行初始化脚本**（如果存在）：
    ```bash
    # 检查新 worktree 目录下是否有初始化脚本
    if [ -x <path>/.claude/worktree-init.sh ]; then
      cd <path> && ./.claude/worktree-init.sh
    fi
+   ```
+
+5. **读取生成的端口配置**：
+   ```bash
+   # 从初始化脚本生成的配置中读取端口
+   cat <path>/.claude/worktree.json
+   ```
+
+6. **用 VS Code 打开**：
+   ```bash
+   # 优先使用 code 命令，不可用时 fallback 到 open
+   code <path> 2>/dev/null || open -a "Visual Studio Code" <path>
    ```
 
 输出格式：
@@ -124,8 +130,11 @@ git worktree prune
 🌿 分支: branch-name
 📍 基于: current-branch
 
+🔧 初始化完成，服务已启动：
+🌐 Next.js:    http://localhost:<nextjs-port>
+📖 Storybook:  http://localhost:<storybook-port>
+
 已用 VS Code 打开新目录
-🔧 正在执行初始化脚本...
 ```
 
 ## 错误处理
