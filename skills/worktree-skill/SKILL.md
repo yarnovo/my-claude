@@ -44,11 +44,24 @@ git worktree list
 
 1. 解析要删除的 worktree（支持：目录名、分支名、模糊匹配）
 2. 检查是否有未提交更改
-3. 执行删除：
+3. 如有多个匹配，列出让用户选择
+4. **读取域名配置**（删除前）：
+   ```bash
+   cat <path>/.claude/worktree.json  # 获取 domain 字段
+   ```
+5. **清理 Caddy 配置**：
+   ```bash
+   # 从 ~/.config/caddy/worktrees.caddy 删除对应域名配置块
+   # 匹配注释行 "# <branch-name>" 到下一个空行之间的内容
+   sed -i '' '/^# <branch-name>$/,/^$/d' ~/.config/caddy/worktrees.caddy
+
+   # 重载 Caddy
+   caddy reload --config /opt/homebrew/etc/Caddyfile
+   ```
+6. 执行删除：
    ```bash
    git worktree remove <path>
    ```
-4. 如有多个匹配，列出让用户选择
 
 输出格式：
 ```
@@ -56,6 +69,7 @@ git worktree list
 
 📁 目录: /path/to/repo-branch（已删除）
 🌿 分支: branch-name（保留）
+🌐 Caddy 配置已清理
 ```
 
 ### 同步检查
@@ -131,11 +145,13 @@ git worktree prune
 📍 基于: current-branch
 
 🔧 初始化完成，服务已启动：
-🌐 Next.js:    http://localhost:<nextjs-port>
-📖 Storybook:  http://localhost:<storybook-port>
+🌐 Next.js:    https://<domain-name>.localhost
+📖 Storybook:  https://<domain-name>-sb.localhost
 
 已用 VS Code 打开新目录
 ```
+
+注意：域名从分支名提取（去掉前缀和日期后缀），例如 `main-loan-consulting-agent-20260102` -> `loan-consulting-agent`
 
 ## 错误处理
 
