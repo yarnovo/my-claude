@@ -138,13 +138,22 @@ git worktree prune
    fi
    ```
 
-6. **读取生成的端口配置**：
+6. **创建目标文件**（记录 worktree 的开发目标）：
+   - 检查 `.gitignore` 是否包含 `WORKTREE_TARGET.md`，不在则添加
+   - 创建 `WORKTREE_TARGET.md` 文件，内容包含：
+     - 标题：用户的功能描述
+     - 功能目标：简要说明要实现什么
+     - 核心需求：拆解主要任务点
+     - 技术要点：可能涉及的技术方向
+   - 这是一个临时文件，仅用于本 worktree 的开发跟踪
+
+7. **读取生成的端口配置**：
    ```bash
    # 从初始化脚本生成的配置中读取端口
    cat <path>/.claude/worktree.json
    ```
 
-7. **用 VS Code 打开**：
+8. **用 VS Code 打开**：
    ```bash
    # 优先使用 code 命令，不可用时 fallback 到 open
    code <path> 2>/dev/null || open -a "Visual Studio Code" <path>
@@ -157,10 +166,11 @@ git worktree prune
 📁 目录: /path/to/repo-branch
 🌿 分支: branch-name
 📍 基于: current-branch
+🎯 目标: WORKTREE_TARGET.md（已创建）
 
-🔧 初始化完成，服务已启动：
-🌐 Next.js:    https://<domain-name>.localhost
-📖 Storybook:  https://<domain-name>-sb.localhost
+📌 启动服务后可访问：
+   🌐 Next.js:    https://<domain-name>.localhost (pnpm dev)
+   📖 Storybook:  https://<domain-name>-sb.localhost (pnpm storybook)
 
 已用 VS Code 打开新目录
 ```
