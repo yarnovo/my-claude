@@ -1,5 +1,5 @@
 ---
-name: worktree
+name: worktree-skill
 description: Git Worktree 管理（支持分支名或功能描述）
 allowed-tools: Bash, Read, Write
 ---

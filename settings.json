@@ -2,12 +2,7 @@
   "hooks": {
     "Stop": [
       {
-        "hooks": [
-          {
-            "type": "prompt",
-            "prompt": "审查本次对话，判断是否涉及代码变更或技术发现。\n\n如果有代码变更或技术发现，返回：\n{\"decision\": \"block\", \"reason\": \"运行 /remember 和 /check-coverage skill\"}\n\n如果只是简单问答或无实质内容，返回：\n{\"decision\": \"approve\"}"
-          }
-        ]
+        "hooks": []
       }
     ]
   }
