@@ -52,8 +52,8 @@ git worktree list
 5. **清理 Caddy 配置**：
    ```bash
    # 从 ~/.config/caddy/worktrees.caddy 删除对应域名配置块
-   # 匹配注释行 "# <branch-name>" 到下一个空行之间的内容
-   sed -i '' '/^# <branch-name>$/,/^$/d' ~/.config/caddy/worktrees.caddy
+   # 匹配 START 到 END 标记之间的所有内容（包含 3 个域名配置）
+   sed -i '' '/^# worktree: <branch-name> - START$/,/^# worktree: <branch-name> - END$/d' ~/.config/caddy/worktrees.caddy
 
    # 重载 Caddy
    caddy reload --config /opt/homebrew/etc/Caddyfile
@@ -69,7 +69,7 @@ git worktree list
 
 📁 目录: /path/to/repo-branch（已删除）
 🌿 分支: branch-name（保留）
-🌐 Caddy 配置已清理
+🌐 Caddy 配置已清理（Next.js / Storybook / Inngest）
 ```
 
 ### 同步检查
@@ -171,6 +171,7 @@ git worktree prune
 📌 启动服务后可访问：
    🌐 Next.js:    https://<domain-name>.localhost (pnpm dev)
    📖 Storybook:  https://<domain-name>-sb.localhost (pnpm storybook)
+   ⚡ Inngest:    https://<domain-name>-inngest.localhost (pnpm inngest:dev)
 
 已用 VS Code 打开新目录
 ```

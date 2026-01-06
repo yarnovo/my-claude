@@ -11,3 +11,6 @@
 
 # 保留 gitignore 自身
 !.gitignore
+
+# 保留设置文件
+!settings.json
