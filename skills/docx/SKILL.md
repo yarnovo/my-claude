@@ -1,5 +1,5 @@
 ---
-name: docx-skill
+name: docx
 description: 读取 Word 文档，转换为 Markdown + 图片
 allowed-tools: Bash, Read
 ---
@@ -22,7 +22,7 @@ cd ~/.claude/office-deps && uv sync
 ### 2. 转换文档
 
 ```bash
-cd ~/.claude/office-deps && uv run python ~/.claude/skills/docx-skill/scripts/convert.py "<文件路径>"
+cd ~/.claude/office-deps && uv run python ~/.claude/skills/docx/scripts/convert.py "<文件路径>"
 ```
 
 ### 3. 读取转换结果

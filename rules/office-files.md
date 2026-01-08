@@ -4,9 +4,9 @@
 
 | 文件类型 | 扩展名 | 技能 |
 |---------|--------|------|
-| Word 文档 | `.docx` | docx-skill |
-| Excel 表格 | `.xlsx`, `.xls` | xlsx-skill |
-| PowerPoint | `.pptx`, `.ppt` | pptx-skill |
+| Word 文档 | `.docx` | docx |
+| Excel 表格 | `.xlsx`, `.xls` | xlsx |
+| PowerPoint | `.pptx`, `.ppt` | pptx |
 
 ## 工作流程
 
@@ -21,7 +21,7 @@
 用户请求：「帮我看看 report.docx 里写了什么」
 
 执行步骤：
-1. 调用 docx-skill 转换 report.docx
+1. 调用 docx 转换 report.docx
 2. 读取 report.docx.claude/content.md
 3. 如有图片，读取 report.docx.claude/images/ 下的图片
 4. 向用户展示内容

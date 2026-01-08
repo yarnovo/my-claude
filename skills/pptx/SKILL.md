@@ -1,5 +1,5 @@
 ---
-name: pptx-skill
+name: pptx
 description: 读取 PowerPoint 演示文稿，转换为 Markdown + 幻灯片预览图
 allowed-tools: Bash, Read
 ---
@@ -22,7 +22,7 @@ cd ~/.claude/office-deps && uv sync
 ### 2. 转换文档
 
 ```bash
-cd ~/.claude/office-deps && uv run python ~/.claude/skills/pptx-skill/scripts/convert.py "<文件路径>"
+cd ~/.claude/office-deps && uv run python ~/.claude/skills/pptx/scripts/convert.py "<文件路径>"
 ```
 
 ### 3. 读取转换结果

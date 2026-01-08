@@ -1,5 +1,5 @@
 ---
-name: xlsx-skill
+name: xlsx
 description: 读取 Excel 表格，转换为 Markdown + 公式 + 截图
 allowed-tools: Bash, Read
 ---
@@ -22,7 +22,7 @@ cd ~/.claude/office-deps && uv sync
 ### 2. 转换文档
 
 ```bash
-cd ~/.claude/office-deps && uv run python ~/.claude/skills/xlsx-skill/scripts/convert.py "<文件路径>"
+cd ~/.claude/office-deps && uv run python ~/.claude/skills/xlsx/scripts/convert.py "<文件路径>"
 ```
 
 ### 3. 读取转换结果

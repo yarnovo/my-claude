@@ -1,5 +1,5 @@
 ---
-name: commit-skill
+name: commit
 description: 自动总结 staged 内容并提交（遵循 Conventional Commits 完整规范）
 allowed-tools: Bash, Read
 ---
