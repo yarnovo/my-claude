@@ -123,7 +123,6 @@ git worktree list
 
 3. **创建目标文件**：
    - 检查 `.gitignore` 是否包含 `WORKTREE_TARGET.md`，不在则添加
-   - 检查 `.gitignore` 是否包含 `WORKTREE_PLAN.md`，不在则添加
    - 检查 `.gitignore` 是否包含 `start-planning.sh`，不在则添加
    - 创建 `WORKTREE_TARGET.md` 文件，内容包含：
      - 标题：用户的功能描述
@@ -150,14 +149,7 @@ git worktree list
    claude --permission-mode plan "请阅读 WORKTREE_TARGET.md 了解开发目标，然后：
    1. 探索代码库，理解现有架构
    2. 设计实现方案
-   3. 将详细的实施规划输出到 WORKTREE_PLAN.md
-
-   规划文档格式：
-   - 目标概述
-   - 技术方案
-   - 实施步骤（按优先级排序）
-   - 涉及的文件列表
-   - 潜在风险点"
+"
    EOF
    chmod +x <path>/start-planning.sh
    ```
