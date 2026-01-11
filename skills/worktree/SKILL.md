@@ -14,7 +14,7 @@ allowed-tools: Bash, Read, Write
 3. **创建目标文档** - 写入 WORKTREE_TARGET.md
 4. **打开 VSCode** - 在新工作区中打开编辑器
 5. **执行初始化** - 运行工作区初始化脚本
-6. **启动规划 Agent** - 打开终端执行 Claude Code，让其读取目标文档并输出规划
+6. **创建规划脚本** - 创建 start-planning.sh（用户在 VSCode 中自行执行）
 
 ## 参数
 
@@ -143,10 +143,8 @@ git worktree list
    fi
    ```
 
-6. **启动规划 Agent**：
-   创建启动脚本并执行：
+6. **创建规划脚本**（不执行，用户在 VSCode 中自行运行）：
    ```bash
-   # 创建启动脚本
    cat > <path>/start-planning.sh << 'EOF'
    #!/bin/bash
    claude --permission-mode plan "请阅读 WORKTREE_TARGET.md 了解开发目标，然后：
@@ -159,12 +157,9 @@ git worktree list
    - 技术方案
    - 实施步骤（按优先级排序）
    - 涉及的文件列表
-   - 潜在风险点" <path>
+   - 潜在风险点"
    EOF
    chmod +x <path>/start-planning.sh
-
-   # 执行启动脚本
-   <path>/start-planning.sh
    ```
 
 输出格式：
@@ -176,7 +171,11 @@ git worktree list
 📍 基于: current-branch
 🎯 目标: WORKTREE_TARGET.md（已创建）
 
-🚀 已在 VSCode 终端启动规划 Agent
+📌 启动服务后可访问：
+   🌐 Next.js:    https://<domain>.localhost (pnpm dev)
+   📖 Storybook:  https://<domain>-sb.localhost (pnpm storybook)
+
+🚀 下一步：在 VSCode 终端执行 ./start-planning.sh 启动规划 Agent
 ```
 
 ## 错误处理
