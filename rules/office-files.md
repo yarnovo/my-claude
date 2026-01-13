@@ -4,6 +4,7 @@
 
 | 文件类型 | 扩展名 | 技能 |
 |---------|--------|------|
+| PDF 文档 | `.pdf` | pdf |
 | Word 文档 | `.docx` | docx |
 | Excel 表格 | `.xlsx`, `.xls` | xlsx |
 | PowerPoint | `.pptx`, `.ppt` | pptx |
@@ -14,7 +15,9 @@
 2. **调用技能**：使用相应技能转换文件
 3. **读取转换结果**：
    - `<file>.claude/content.md` - Markdown 内容
-   - `<file>.claude/images/` 或 `<file>.claude/previews/` - 图片
+   - `<file>.claude/images/` - Word 内嵌图片
+   - `<file>.claude/previews/` - PPTX 幻灯片预览图
+   - `<file>.claude/pages/` - PDF 页面预览图
 
 ## 示例
 

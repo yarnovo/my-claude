@@ -6,9 +6,70 @@ PPTX 转换脚本
 
 import sys
 import os
+import re
 import subprocess
 import tempfile
 from pathlib import Path
+
+
+def clean_slide_content(content: str) -> str:
+    """清理幻灯片内容，移除不需要的元数据"""
+    lines = content.split('\n')
+    cleaned_lines = []
+
+    skip_line_patterns = [
+        # Windows/Mac 文件路径（作为独立行）
+        r'^[A-Z]:\\',
+        r'^/Users/',
+        r'^/home/',
+        # AI 生成的图片描述（作为独立行）
+        r'^A (table|screenshot|image|diagram|chart|picture)',
+        r'^Document preview',
+        # Notes 部分标题
+        r'^#{1,3}\s*Notes:?\s*$',
+        # 空的 Slide 标题后面的占位符（包括带 # 的）
+        r'^#{0,3}\s*NOTE\s*$',
+        # HTML 注释（Slide number）
+        r'^<!--.*-->$',
+        # 只有数字的行（页码）
+        r'^\d+$',
+    ]
+
+    # 图片行模式 - 移除包含 Windows 路径或 AI 描述的图片
+    img_skip_patterns = [
+        r'!\[.*[A-Z]:\\.*\]',  # Windows 路径在 alt text
+        r'!\[.*AI-generated.*\]',  # AI 描述
+        r'!\[.*screenshot.*\]',
+        r'!\[\]\(',  # 空 alt text 的图片
+    ]
+
+    for line in lines:
+        stripped = line.strip()
+
+        # 检查是否匹配任何跳过模式
+        should_skip = False
+
+        # 检查行级跳过模式
+        for pattern in skip_line_patterns:
+            if re.match(pattern, stripped, re.IGNORECASE):
+                should_skip = True
+                break
+
+        # 检查图片跳过模式
+        if not should_skip:
+            for pattern in img_skip_patterns:
+                if re.search(pattern, stripped, re.IGNORECASE):
+                    should_skip = True
+                    break
+
+        if not should_skip:
+            cleaned_lines.append(line)
+
+    # 移除连续的空行
+    result = '\n'.join(cleaned_lines)
+    result = re.sub(r'\n{3,}', '\n\n', result)
+
+    return result.strip()
 
 
 def generate_previews(file_path: Path, output_dir: Path) -> list:
@@ -110,13 +171,20 @@ def convert_pptx(file_path: str) -> None:
     # 构建完整内容（添加预览图引用）
     content_parts = [f"# 演示文稿: {input_path.name}\n\n"]
 
-    # markitdown 会按幻灯片分隔内容
-    # 尝试在每个幻灯片后添加预览图引用
-    slides = result.text_content.split('\n---\n')
+    # markitdown 使用 <!-- Slide number: N --> 标记幻灯片
+    # 按这个模式分割内容
+    slide_pattern = r'<!-- Slide number: \d+ -->'
+    slides = re.split(slide_pattern, result.text_content)
+
+    # 第一个元素是空的或者是文件头，跳过
+    slides = [s for s in slides if s.strip()]
 
     for i, slide_content in enumerate(slides, 1):
-        if slide_content.strip():
-            content_parts.append(slide_content.strip())
+        cleaned_content = clean_slide_content(slide_content)
+        if cleaned_content:
+            # 添加幻灯片标题
+            content_parts.append(f"## Slide {i}\n\n")
+            content_parts.append(cleaned_content)
             content_parts.append("\n\n")
 
             # 添加预览图引用
