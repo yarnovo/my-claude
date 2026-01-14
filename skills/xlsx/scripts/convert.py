@@ -133,8 +133,12 @@ def convert_xlsx(file_path: str) -> None:
     # 提取公式
     formulas = get_formulas(input_path)
 
+    # 生成截图（先生成截图，以便在 program-output.md 中引用）
+    screenshots = generate_screenshots(input_path, output_dir)
+
     # 构建完整内容
-    content_parts = [result.text_content]
+    content_parts = [f"# Excel: {input_path.name}\n\n"]
+    content_parts.append(result.text_content)
 
     if formulas:
         content_parts.append("\n\n---\n\n## 公式汇总\n")
@@ -144,18 +148,23 @@ def convert_xlsx(file_path: str) -> None:
                 result_str = f['result'] if f['result'] is not None else '(未计算)'
                 content_parts.append(f"- **{f['cell']}**: `{f['formula']}` → {result_str}\n")
 
-    # 保存 Markdown 内容
-    content_path = output_dir / "content.md"
-    content_path.write_text(''.join(content_parts), encoding='utf-8')
+    # 添加工作表截图引用
+    if screenshots:
+        content_parts.append("\n\n---\n\n## 工作表预览\n\n")
+        for i, screenshot in enumerate(screenshots, 1):
+            content_parts.append(f"### Sheet {i}\n\n")
+            content_parts.append(f"![Sheet {i}](sheets/sheet_{i:02d}.png)\n\n")
+
+    # 保存程序转换结果（待 AI 进一步处理）
+    output_path = output_dir / "program-output.md"
+    output_path.write_text(''.join(content_parts), encoding='utf-8')
 
     print(f"✅ 转换完成!")
     print(f"📁 输出目录: {output_dir}")
-    print(f"📄 Markdown: {content_path}")
-
-    # 生成截图
-    screenshots = generate_screenshots(input_path, output_dir)
+    print(f"📄 程序结果: {output_path}")
     if screenshots:
         print(f"🖼️  截图数量: {len(screenshots)}")
+    print(f"⏳ 待处理: AI 读取截图生成 content.md")
 
 
 def main():

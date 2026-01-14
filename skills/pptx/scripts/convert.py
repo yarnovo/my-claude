@@ -194,14 +194,15 @@ def convert_pptx(file_path: str) -> None:
 
             content_parts.append("---\n\n")
 
-    # 保存 Markdown 内容
-    content_path = output_dir / "content.md"
-    content_path.write_text(''.join(content_parts), encoding='utf-8')
+    # 保存程序转换结果（待 AI 进一步处理）
+    output_path = output_dir / "program-output.md"
+    output_path.write_text(''.join(content_parts), encoding='utf-8')
 
     print(f"✅ 转换完成!")
     print(f"📁 输出目录: {output_dir}")
-    print(f"📄 Markdown: {content_path}")
+    print(f"📄 程序结果: {output_path}")
     print(f"🖼️  预览图数量: {len(previews)}")
+    print(f"⏳ 待处理: AI 读取预览图生成 content.md")
 
 
 def main():

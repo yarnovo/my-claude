@@ -3,11 +3,11 @@
 PDF 转换脚本
 使用 PyMuPDF4LLM 将 PDF 文档转换为 Markdown + 页面预览图
 
-PyMuPDF4LLM 是 2025 年 PDF 转 Markdown 的最佳实践:
-- 速度快 (0.12s)
-- 优秀的 Markdown 输出质量
-- 良好的表格支持
-- 自动识别标题、列表、代码块等格式
+输出：
+- origin.md: 原始转换结果（按页组织，包含图片引用）
+- pages/: 页面预览图
+
+后续由 AI 智能转换生成 content.md（纯文本，无图片引用）
 """
 
 import sys
@@ -42,7 +42,7 @@ def generate_page_images(file_path: Path, output_dir: Path) -> list:
 
 
 def convert_pdf(file_path: str) -> None:
-    """使用 PyMuPDF4LLM 转换 PDF 文件为 Markdown + 页面预览图"""
+    """使用 PyMuPDF4LLM 转换 PDF 文件为 origin.md + 页面预览图"""
     import pymupdf4llm
 
     input_path = Path(file_path).resolve()
@@ -61,23 +61,17 @@ def convert_pdf(file_path: str) -> None:
 
     print(f"📄 使用 PyMuPDF4LLM 提取文本...")
 
-    # 使用 PyMuPDF4LLM 提取 Markdown（这是 2025 年最佳实践）
-    # 自动处理：标题、表格、列表、代码块、多列布局等
+    # 使用 PyMuPDF4LLM 提取 Markdown
     md_text = pymupdf4llm.to_markdown(str(input_path))
 
     # 生成页面预览图
     page_images = generate_page_images(input_path, output_dir)
     total_pages = len(page_images)
 
-    # 构建最终 Markdown 内容
+    # 构建 origin.md 内容（按页组织，包含图片引用）
     content_parts = [f"# PDF: {input_path.name}\n\n"]
 
-    # PyMuPDF4LLM 的输出已经包含了良好的格式
-    # 我们需要在每页之间插入预览图引用
-
     if total_pages > 0:
-        # 尝试按 "-----" 或其他分页标记分割
-        # PyMuPDF4LLM 通常不会添加明确的分页标记，所以我们按比例分配
         lines = md_text.split('\n')
         lines_per_page = max(1, len(lines) // total_pages) if total_pages > 0 else len(lines)
 
@@ -96,14 +90,15 @@ def convert_pdf(file_path: str) -> None:
         content_parts.append(md_text)
         content_parts.append("\n")
 
-    # 保存 Markdown 内容
-    content_path = output_dir / "content.md"
-    content_path.write_text(''.join(content_parts), encoding='utf-8')
+    # 保存程序转换结果（待 AI 进一步处理）
+    output_path = output_dir / "program-output.md"
+    output_path.write_text(''.join(content_parts), encoding='utf-8')
 
     print(f"✅ 转换完成!")
     print(f"📁 输出目录: {output_dir}")
-    print(f"📄 Markdown: {content_path}")
+    print(f"📄 程序结果: {output_path}")
     print(f"🖼️  预览图数量: {total_pages}")
+    print(f"⏳ 待处理: AI 读取预览图生成 content.md")
 
 
 def main():
