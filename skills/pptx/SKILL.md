@@ -118,9 +118,35 @@ cd ~/.claude/office-deps && uv run python ~/.claude/skills/pptx/scripts/convert.
 | Investment | 12 months | 18 months | 24 months |
 ```
 
-#### 3.3 提取质量自检
+#### 3.3 强制性检查步骤（必须执行）
 
-在保存 `content.md` 前，检查以下项目：
+**在生成 content.md 之前，必须完成以下步骤：**
+
+**Step A: 列出所有需要处理的幻灯片**
+
+执行命令查找所有标记：
+```bash
+grep "likely_table=true" program-output.md
+```
+
+记录所有幻灯片编号，例如：Slide 2, 3, 4, 5, 6, 7, 8, 11...
+
+**Step B: 逐一处理每个标记的幻灯片**
+
+对于每个 `likely_table=true` 的幻灯片：
+1. 读取预览图 `previews/slide_XX.png`
+2. 识别预览图中的所有表格
+3. 将表格转换为 Markdown 格式
+4. 验证行数/列数与预览图一致
+
+**Step C: 交叉验证**
+
+在保存 content.md 前，再次检查：
+- [ ] 每个标记的幻灯片编号都有对应的表格内容
+- [ ] 没有将多个幻灯片合并或跳过
+- [ ] 相邻幻灯片如果标题相同（如连续的 "Loan amount"），每个都要单独处理
+
+#### 3.4 提取质量自检
 
 **表格完整性检查**：
 - [ ] 所有标记为 `likely_table=true` 的幻灯片都已处理

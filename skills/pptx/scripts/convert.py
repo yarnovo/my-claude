@@ -93,9 +93,24 @@ def analyze_slide_content(file_path: str) -> Dict[int, Dict]:
 
     # 表格相关关键词（标题中出现这些词的幻灯片可能包含表格）
     TABLE_KEYWORDS = [
+        # 核心业务术语
         'matrix', 'rate', 'ltv', 'fico', 'reserve', 'pricing',
         'adjustment', 'fee', 'requirement', 'limit', 'guideline',
-        'eligibility', 'qualification', 'chart', 'schedule'
+        'eligibility', 'qualification', 'chart', 'schedule',
+        # 贷款相关
+        'loan', 'amount', 'mortgage', 'arm', 'fixed',
+        # 表格标识
+        'table', 'grid', 'summary', 'overview',
+        # 其他业务术语
+        'property', 'occupancy', 'transaction', 'borrower',
+        'income', 'asset', 'dti', 'appraisal', 'interest'
+    ]
+
+    # 强匹配短语（出现这些短语一定标记为表格）
+    TABLE_PHRASES = [
+        'loan amount', 'rate sheet', 'fee adjustment', 'ltv matrix',
+        'reserve requirement', 'eligibility matrix', 'qualifying rate',
+        'interest only', 'second home', 'cash out'
     ]
 
     analysis = {}
@@ -119,10 +134,22 @@ def analyze_slide_content(file_path: str) -> Dict[int, Dict]:
             if hasattr(shape, "text") and shape.text:
                 slide_text += " " + shape.text.lower()
 
+        # 检查强匹配短语
+        has_table_phrase = False
+        matched_phrase = ""
+        for phrase in TABLE_PHRASES:
+            if phrase in slide_text:
+                has_table_phrase = True
+                matched_phrase = phrase
+                break
+
         # 检查关键词
+        has_table_keyword = False
+        matched_keyword = ""
         for keyword in TABLE_KEYWORDS:
             if keyword in slide_text:
                 has_table_keyword = True
+                matched_keyword = keyword
                 break
 
         # 判断是否可能包含表格的启发式规则
@@ -133,6 +160,10 @@ def analyze_slide_content(file_path: str) -> Dict[int, Dict]:
             # 有原生表格但 markitdown 可能无法正确提取
             likely_table = True
             detection_reason = f"native_table({table_count})"
+        elif has_table_phrase:
+            # 强匹配短语 - 一定标记
+            likely_table = True
+            detection_reason = f"phrase({matched_phrase})"
         elif image_count >= 2:
             # 多图片可能包含嵌入的表格截图
             likely_table = True
@@ -140,12 +171,12 @@ def analyze_slide_content(file_path: str) -> Dict[int, Dict]:
         elif has_table_keyword and image_count >= 1:
             # 有表格关键词且有图片
             likely_table = True
-            detection_reason = "keyword+image"
+            detection_reason = f"keyword+image({matched_keyword})"
         elif has_table_keyword:
             # 即使没有图片，有关键词也标记为可能需要检查
             # （表格可能是 Text Box 组成的）
             likely_table = True
-            detection_reason = "keyword_only"
+            detection_reason = f"keyword_only({matched_keyword})"
 
         analysis[slide_num] = {
             'image_count': image_count,
