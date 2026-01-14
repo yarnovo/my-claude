@@ -75,8 +75,10 @@ def clean_slide_content(content: str) -> str:
 
 def analyze_slide_content(file_path: str) -> Dict[int, Dict]:
     """
-    分析每张幻灯片的内容类型
-    返回: {slide_num: {'image_count': int, 'table_count': int, 'likely_table_slide': bool, 'detection_reason': str}}
+    分析每张幻灯片的客观信息
+    返回: {slide_num: {'image_count': int, 'table_count': int}}
+
+    注意：只统计客观事实，不做业务判断。AI 会根据预览图自行判断是否需要提取表格。
     """
     try:
         from pptx import Presentation
@@ -91,35 +93,11 @@ def analyze_slide_content(file_path: str) -> Dict[int, Dict]:
         print(f"警告: 无法打开 PPTX 进行分析 - {e}", file=sys.stderr)
         return {}
 
-    # 表格相关关键词（标题中出现这些词的幻灯片可能包含表格）
-    TABLE_KEYWORDS = [
-        # 核心业务术语
-        'matrix', 'rate', 'ltv', 'fico', 'reserve', 'pricing',
-        'adjustment', 'fee', 'requirement', 'limit', 'guideline',
-        'eligibility', 'qualification', 'chart', 'schedule',
-        # 贷款相关
-        'loan', 'amount', 'mortgage', 'arm', 'fixed',
-        # 表格标识
-        'table', 'grid', 'summary', 'overview',
-        # 其他业务术语
-        'property', 'occupancy', 'transaction', 'borrower',
-        'income', 'asset', 'dti', 'appraisal', 'interest'
-    ]
-
-    # 强匹配短语（出现这些短语一定标记为表格）
-    TABLE_PHRASES = [
-        'loan amount', 'rate sheet', 'fee adjustment', 'ltv matrix',
-        'reserve requirement', 'eligibility matrix', 'qualifying rate',
-        'interest only', 'second home', 'cash out'
-    ]
-
     analysis = {}
 
     for slide_num, slide in enumerate(prs.slides, 1):
         image_count = 0
         table_count = 0
-        has_table_keyword = False
-        slide_text = ""
 
         for shape in slide.shapes:
             # 统计图片
@@ -130,59 +108,9 @@ def analyze_slide_content(file_path: str) -> Dict[int, Dict]:
             if shape.shape_type == MSO_SHAPE_TYPE.TABLE:
                 table_count += 1
 
-            # 收集文本内容
-            if hasattr(shape, "text") and shape.text:
-                slide_text += " " + shape.text.lower()
-
-        # 检查强匹配短语
-        has_table_phrase = False
-        matched_phrase = ""
-        for phrase in TABLE_PHRASES:
-            if phrase in slide_text:
-                has_table_phrase = True
-                matched_phrase = phrase
-                break
-
-        # 检查关键词
-        has_table_keyword = False
-        matched_keyword = ""
-        for keyword in TABLE_KEYWORDS:
-            if keyword in slide_text:
-                has_table_keyword = True
-                matched_keyword = keyword
-                break
-
-        # 判断是否可能包含表格的启发式规则
-        likely_table = False
-        detection_reason = ""
-
-        if table_count > 0:
-            # 有原生表格但 markitdown 可能无法正确提取
-            likely_table = True
-            detection_reason = f"native_table({table_count})"
-        elif has_table_phrase:
-            # 强匹配短语 - 一定标记
-            likely_table = True
-            detection_reason = f"phrase({matched_phrase})"
-        elif image_count >= 2:
-            # 多图片可能包含嵌入的表格截图
-            likely_table = True
-            detection_reason = f"multi_image({image_count})"
-        elif has_table_keyword and image_count >= 1:
-            # 有表格关键词且有图片
-            likely_table = True
-            detection_reason = f"keyword+image({matched_keyword})"
-        elif has_table_keyword:
-            # 即使没有图片，有关键词也标记为可能需要检查
-            # （表格可能是 Text Box 组成的）
-            likely_table = True
-            detection_reason = f"keyword_only({matched_keyword})"
-
         analysis[slide_num] = {
             'image_count': image_count,
             'table_count': table_count,
-            'likely_table_slide': likely_table,
-            'detection_reason': detection_reason
         }
 
     return analysis
@@ -304,17 +232,12 @@ def convert_pptx(file_path: str) -> None:
             # 添加幻灯片标题
             content_parts.append(f"## Slide {i}\n\n")
 
-            # 添加幻灯片分析元数据
+            # 添加幻灯片客观信息（图片数、原生表格数）
             if i in slide_analysis:
                 analysis = slide_analysis[i]
                 img_count = analysis['image_count']
-                table_count = analysis.get('table_count', 0)
-                likely_table = analysis['likely_table_slide']
-                reason = analysis.get('detection_reason', '')
-                content_parts.append(f"<!-- SLIDE_ANALYSIS: images={img_count}, tables={table_count}, likely_table={str(likely_table).lower()}, reason={reason} -->\n")
-                if likely_table:
-                    content_parts.append("<!-- AI_INSTRUCTION: **必须**仔细查看预览图提取所有表格数据到 Markdown 表格格式 -->\n")
-                content_parts.append("\n")
+                table_count = analysis['table_count']
+                content_parts.append(f"<!-- SLIDE_INFO: images={img_count}, tables={table_count} -->\n\n")
 
             content_parts.append(cleaned_content)
             content_parts.append("\n\n")
