@@ -72,17 +72,19 @@ content.md:
 
 ### 4. 验证转换结果
 
-使用 Task 工具启动验证 subagent：
+使用 Task 工具调用 `docx-validator` subagent 进行验证：
+
+- **subagent_type**: `docx-validator`
+- **description**: `验证 docx 转换结果`
+- **prompt**: 传入 output_dir 和 report_path 参数
 
 ```
-Task(
-  subagent_type: "general-purpose",
-  prompt: "按照 ~/.claude/agents/docx-validator.md 的指引，验证转换结果：
-    - output_dir: <文件路径>.claude/
-    - report_path: <文件所在目录>/<文件名>-verify-report.md
-  对比 program-output.md + 图片 与 content.md，检查内容一致性和完整性。"
-)
+验证转换结果：
+- output_dir: <文件路径>.claude/
+- report_path: <文件所在目录>/<文件名>-verify-report.md
 ```
+
+验证器会对比 program-output.md + 图片 与 content.md，检查内容一致性和完整性。
 
 ## 输出格式
 

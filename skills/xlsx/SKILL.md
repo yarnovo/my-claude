@@ -78,17 +78,19 @@ content.md:
 
 ### 4. 验证转换结果
 
-使用 Task 工具启动验证 subagent：
+使用 Task 工具调用 `xlsx-validator` subagent 进行验证：
+
+- **subagent_type**: `xlsx-validator`
+- **description**: `验证 xlsx 转换结果`
+- **prompt**: 传入 output_dir 和 report_path 参数
 
 ```
-Task(
-  subagent_type: "general-purpose",
-  prompt: "按照 ~/.claude/agents/xlsx-validator.md 的指引，验证转换结果：
-    - output_dir: <文件路径>.claude/
-    - report_path: <文件所在目录>/<文件名>-verify-report.md
-  对比 sheets/ 截图 + program-output.md 与 content.md，检查内容一致性和完整性。"
-)
+验证转换结果：
+- output_dir: <文件路径>.claude/
+- report_path: <文件所在目录>/<文件名>-verify-report.md
 ```
+
+验证器会对比 sheets/ 截图 + program-output.md 与 content.md，检查内容一致性和完整性。
 
 **示例**：对于 `/path/to/data.xlsx`
 - output_dir: `/path/to/data.xlsx.claude/`

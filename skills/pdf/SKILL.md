@@ -74,17 +74,19 @@ content.md:
 
 ### 4. 验证转换结果
 
-使用 Task 工具启动验证 subagent：
+使用 Task 工具调用 `pdf-validator` subagent 进行验证：
+
+- **subagent_type**: `pdf-validator`
+- **description**: `验证 pdf 转换结果`
+- **prompt**: 传入 output_dir 和 report_path 参数
 
 ```
-Task(
-  subagent_type: "general-purpose",
-  prompt: "按照 ~/.claude/agents/pdf-validator.md 的指引，验证转换结果：
-    - output_dir: <文件路径>.claude/
-    - report_path: <文件所在目录>/<文件名>-verify-report.md
-  对比 pages/ 预览图 + program-output.md 与 content.md，检查内容一致性和完整性。"
-)
+验证转换结果：
+- output_dir: <文件路径>.claude/
+- report_path: <文件所在目录>/<文件名>-verify-report.md
 ```
+
+验证器会对比 pages/ 预览图 + program-output.md 与 content.md，检查内容一致性和完整性。
 
 **示例**：对于 `/path/to/document.pdf`
 - output_dir: `/path/to/document.pdf.claude/`
