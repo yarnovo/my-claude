@@ -10,6 +10,7 @@ import re
 import subprocess
 import tempfile
 from pathlib import Path
+from typing import Dict
 
 
 def clean_slide_content(content: str) -> str:
@@ -70,6 +71,90 @@ def clean_slide_content(content: str) -> str:
     result = re.sub(r'\n{3,}', '\n\n', result)
 
     return result.strip()
+
+
+def analyze_slide_content(file_path: str) -> Dict[int, Dict]:
+    """
+    分析每张幻灯片的内容类型
+    返回: {slide_num: {'image_count': int, 'table_count': int, 'likely_table_slide': bool, 'detection_reason': str}}
+    """
+    try:
+        from pptx import Presentation
+        from pptx.enum.shapes import MSO_SHAPE_TYPE
+    except ImportError:
+        print("警告: python-pptx 未安装，跳过幻灯片分析", file=sys.stderr)
+        return {}
+
+    try:
+        prs = Presentation(file_path)
+    except Exception as e:
+        print(f"警告: 无法打开 PPTX 进行分析 - {e}", file=sys.stderr)
+        return {}
+
+    # 表格相关关键词（标题中出现这些词的幻灯片可能包含表格）
+    TABLE_KEYWORDS = [
+        'matrix', 'rate', 'ltv', 'fico', 'reserve', 'pricing',
+        'adjustment', 'fee', 'requirement', 'limit', 'guideline',
+        'eligibility', 'qualification', 'chart', 'schedule'
+    ]
+
+    analysis = {}
+
+    for slide_num, slide in enumerate(prs.slides, 1):
+        image_count = 0
+        table_count = 0
+        has_table_keyword = False
+        slide_text = ""
+
+        for shape in slide.shapes:
+            # 统计图片
+            if shape.shape_type == MSO_SHAPE_TYPE.PICTURE:
+                image_count += 1
+
+            # 统计原生表格
+            if shape.shape_type == MSO_SHAPE_TYPE.TABLE:
+                table_count += 1
+
+            # 收集文本内容
+            if hasattr(shape, "text") and shape.text:
+                slide_text += " " + shape.text.lower()
+
+        # 检查关键词
+        for keyword in TABLE_KEYWORDS:
+            if keyword in slide_text:
+                has_table_keyword = True
+                break
+
+        # 判断是否可能包含表格的启发式规则
+        likely_table = False
+        detection_reason = ""
+
+        if table_count > 0:
+            # 有原生表格但 markitdown 可能无法正确提取
+            likely_table = True
+            detection_reason = f"native_table({table_count})"
+        elif image_count >= 2:
+            # 多图片可能包含嵌入的表格截图
+            likely_table = True
+            detection_reason = f"multi_image({image_count})"
+        elif has_table_keyword and image_count >= 1:
+            # 有表格关键词且有图片
+            likely_table = True
+            detection_reason = "keyword+image"
+        elif has_table_keyword:
+            # 即使没有图片，有关键词也标记为可能需要检查
+            # （表格可能是 Text Box 组成的）
+            likely_table = True
+            detection_reason = "keyword_only"
+
+        analysis[slide_num] = {
+            'image_count': image_count,
+            'table_count': table_count,
+            'likely_table_slide': likely_table,
+            'detection_reason': detection_reason
+        }
+
+    return analysis
 
 
 def generate_previews(file_path: Path, output_dir: Path) -> list:
@@ -165,10 +250,13 @@ def convert_pptx(file_path: str) -> None:
     md = MarkItDown()
     result = md.convert(str(input_path))
 
+    # 分析幻灯片内容
+    slide_analysis = analyze_slide_content(str(input_path))
+
     # 生成预览图
     previews = generate_previews(input_path, output_dir)
 
-    # 构建完整内容（添加预览图引用）
+    # 构建完整内容（添加预览图引用和元数据标记）
     content_parts = [f"# 演示文稿: {input_path.name}\n\n"]
 
     # markitdown 使用 <!-- Slide number: N --> 标记幻灯片
@@ -184,6 +272,19 @@ def convert_pptx(file_path: str) -> None:
         if cleaned_content:
             # 添加幻灯片标题
             content_parts.append(f"## Slide {i}\n\n")
+
+            # 添加幻灯片分析元数据
+            if i in slide_analysis:
+                analysis = slide_analysis[i]
+                img_count = analysis['image_count']
+                table_count = analysis.get('table_count', 0)
+                likely_table = analysis['likely_table_slide']
+                reason = analysis.get('detection_reason', '')
+                content_parts.append(f"<!-- SLIDE_ANALYSIS: images={img_count}, tables={table_count}, likely_table={str(likely_table).lower()}, reason={reason} -->\n")
+                if likely_table:
+                    content_parts.append("<!-- AI_INSTRUCTION: **必须**仔细查看预览图提取所有表格数据到 Markdown 表格格式 -->\n")
+                content_parts.append("\n")
+
             content_parts.append(cleaned_content)
             content_parts.append("\n\n")
 
