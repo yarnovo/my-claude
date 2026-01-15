@@ -147,8 +147,10 @@ git worktree list
    cat > <path>/start-planning.sh << 'EOF'
    #!/bin/bash
    claude --permission-mode plan "请阅读 WORKTREE_TARGET.md 了解开发目标，然后：
-   1. 探索代码库，理解现有架构
-   2. 设计实现方案
+1. 探索代码库，理解现有架构
+2. 设计实现方案，将 plan 写入 WORKTREE_PLAN.md
+3. 规划完成后，调用后置脚本检查 gitignore：
+   ~/.claude/skills/worktree/scripts/post-planning.sh WORKTREE_PLAN.md
 "
    EOF
    chmod +x <path>/start-planning.sh
