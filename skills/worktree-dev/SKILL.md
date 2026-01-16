@@ -1,3 +1,8 @@
+---
+name: worktree-dev
+description: Worktree 完整开发流程（头脑风暴 → 探索 → 设计 → 规划 → 执行 → 审查 → 完成）
+---
+
 # Worktree 开发
 
 请阅读 `WORKTREE_TARGET.md` 了解开发目标，然后按以下流程执行完整开发周期。
@@ -113,7 +118,7 @@ Expected: PASS
 
 ## 阶段 5: 执行 Plan
 
-**选择一：** `superpowers:subagent-driven-development`（当前会话）
+**选择一：** `superpowers:subagent-driven-development`
 
 ```
 每个任务循环：
@@ -125,7 +130,7 @@ Expected: PASS
   6. 标记完成，下一个任务
 ```
 
-**选择二：** `superpowers:executing-plans`（新会话）
+**选择二：** `superpowers:executing-plans`
 
 ```
 批次执行（默认每批 3 个任务）：
@@ -277,8 +282,8 @@ Phase 4: 实现修复
 | 探索 | `feature-dev:code-explorer` | 理解代码库 |
 | 设计 | `feature-dev:code-architect` | 设计实现方案 |
 | 规划 | `superpowers:writing-plans` | 编写详细执行计划 |
-| 执行 | `superpowers:subagent-driven-development` | 当前会话执行 |
-| 执行 | `superpowers:executing-plans` | 新会话批次执行 |
+| 执行 | `superpowers:subagent-driven-development` | 派发 subagent + 自动审查 |
+| 执行 | `superpowers:executing-plans` | 批次执行 + 人工反馈 |
 | TDD | `superpowers:test-driven-development` | 写任何代码前 |
 | 调试 | `superpowers:systematic-debugging` | 遇到 bug/测试失败 |
 | 验证 | `superpowers:verification-before-completion` | 声称完成前 |
