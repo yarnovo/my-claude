@@ -14,7 +14,6 @@ allowed-tools: Bash, Read, Write
 3. **创建目标文档** - 写入 WORKTREE_TARGET.md
 4. **打开 VSCode** - 在新工作区中打开编辑器
 5. **执行初始化** - 运行工作区初始化脚本
-6. **创建规划脚本** - 创建 start-planning.sh（用户在 VSCode 中自行执行）
 
 ## 参数
 
@@ -123,12 +122,40 @@ git worktree list
 
 3. **创建目标文件**：
    - 检查 `.gitignore` 是否包含 `WORKTREE_TARGET.md`，不在则添加
-   - 检查 `.gitignore` 是否包含 `start-planning.sh`，不在则添加
-   - 创建 `WORKTREE_TARGET.md` 文件，内容包含：
-     - 标题：用户的功能描述
-     - 功能目标：简要说明要实现什么
-     - 核心需求：拆解主要任务点
-     - 技术要点：可能涉及的技术方向
+   - 创建 `WORKTREE_TARGET.md`，**目的是整理用户想法、帮助理清思路**
+
+     **文档结构**（结合 JTBD + 5W1H + Is/Is Not 方法论）：
+
+     ```markdown
+     # [功能标题]
+
+     ## 用户原声
+     > [完整保留用户原始输入，包括口语化表达、语气词]
+     > [如有多轮对话，按时间顺序记录]
+
+     ## 任务场景（JTBD）
+     **当**[触发情境]**时，我想要**[期望行为]**，以便**[获得的价值]
+
+     ## 需求拆解（5W1H）
+     | 维度 | 内容 |
+     |------|------|
+     | **What** 想要什么 | |
+     | **When** 何时触发 | |
+     | **Who** 谁在使用 | |
+     | **Where** 在哪里发生 | |
+     | **Why** 为什么需要 | |
+
+     ## 边界（Is / Is Not）
+     | 是 | 不是 |
+     |----|------|
+     | [这个功能包含什么] | [这个功能不包含什么] |
+
+     ## 用户提到的线索
+     - [用户提到的现有机制、概念、关键词]
+     - [可能相关但不确定的信息]
+     ```
+
+     **禁止写入**：技术方案、代码路径、架构设计、实现步骤
 
 4. **用 VS Code 打开**：
    ```bash
@@ -140,20 +167,6 @@ git worktree list
    if [ -x <path>/.worktree/init.sh ]; then
      cd <path> && ./.worktree/init.sh
    fi
-   ```
-
-6. **创建规划脚本**（不执行，用户在 VSCode 中自行运行）：
-   ```bash
-   cat > <path>/start-planning.sh << 'EOF'
-   #!/bin/bash
-   claude --permission-mode plan "请阅读 WORKTREE_TARGET.md 了解开发目标，然后：
-1. 探索代码库，理解现有架构
-2. 设计实现方案，将 plan 写入 WORKTREE_PLAN.md
-3. 规划完成后，调用后置脚本检查 gitignore：
-   ~/.claude/skills/worktree/scripts/post-planning.sh WORKTREE_PLAN.md
-"
-   EOF
-   chmod +x <path>/start-planning.sh
    ```
 
 输出格式：
@@ -169,7 +182,7 @@ git worktree list
    🌐 Next.js:    https://<domain>.localhost (pnpm dev)
    📖 Storybook:  https://<domain>-sb.localhost (pnpm storybook)
 
-🚀 下一步：在 VSCode 终端执行 ./start-planning.sh 启动规划 Agent
+🚀 下一步：执行 /worktree-dev 启动开发
 ```
 
 ## 错误处理
