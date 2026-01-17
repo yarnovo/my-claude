@@ -13,9 +13,6 @@
 !/office-deps/
 !/office-deps/**
 
-# 排除虚拟环境
-office-deps/.venv/
-
 # 保留 gitignore 自身
 !.gitignore
 
