@@ -13,6 +13,14 @@
 !/office-deps/
 !/office-deps/**
 
+!/projects/
+!/projects/*/
+!/projects/*/memory/
+!/projects/*/memory/**
+
+# worktree 记忆是符号链接到 main 的，不需要单独保存
+/projects/*worktrees*/
+
 # 保留 gitignore 自身
 !.gitignore
 
