@@ -1,6 +1,6 @@
 ---
 name: commit-global
-description: 提交全局 Claude 配置。当用户说"提交全局 claude"、"commit global claude"等时调用。
+description: 提交全局 Claude 配置。当用户说"提交全局 claude"、"提交全局 cc"、"commit global claude"等时调用。
 allowed-tools: Bash, Read
 ---
 
