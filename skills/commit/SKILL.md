@@ -17,7 +17,6 @@ allowed-tools: Bash, Read, Glob, Grep
 - 根据改动内容生成符合 Conventional Commits 规范的提交信息
 - 格式：`type(scope): description`
 - 常用 type：feat、fix、chore、refactor、docs、test、style
-- 展示提交信息供用户确认
 
 ### 3. 提交
 - 按文件名暂存相关文件（不要用 `git add -A`）
@@ -26,4 +25,3 @@ allowed-tools: Bash, Read, Glob, Grep
 ## 注意事项
 - 不要暂存 .env、credentials 等敏感文件
 - 提交信息用英文，简洁描述 "why" 而非 "what"
-- 提交前展示信息让用户确认
